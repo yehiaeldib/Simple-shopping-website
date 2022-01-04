@@ -2,22 +2,13 @@ var express = require('express');
 var path = require('path');
 var fs = require('fs');
 const e = require('express');
-var authenticated = false;
+const session = require('express-session');
+querystring = require('querystring');
 var app = express();
-var session = require('express-session')
-app.set('trust proxy', 1); // trust first proxy
-app.use(session({
-  secret: 'keyboard cat',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: true }
-}));
-
 
 
 //var usernamebig;
 //var passwordbig;
-
 
 
 /*var andrew = {username: "andrew" , pass: "1234" , cartList: ["iphone", "leaves"]};
@@ -30,22 +21,31 @@ app.set('view engine', 'ejs');
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-
+app.use(session( 
+  {
+    secret : 'secret-key',
+    resave : false ,
+    saveUninitialized : true,
+  }));
 
 app.get('/', function (req, res) {
+  if (req.session.usernamebig)
+  res.render('home')
+else
   res.render('login')
 });
 
-
-
 app.post('/', async function (req, res) {
- var listbig = [] ;
+  
 
-  var a = { username: req.body.username, pass: req.body.password , listbig:listbig };
- 
- 
-              
-              //passwordbig=req.body.password;
+ ll = ['home'] ;
+  req.session.usernamebig = req.body.username;
+  req.session.passwordbig = req.body.password;
+  listbig= ['home']
+
+  var a = { username:  req.session.usernamebig, pass: req.session.passwordbig };
+  
+             
               
   flag = await main2(a);
 
@@ -57,21 +57,20 @@ app.post('/', async function (req, res) {
   await client.connect();
   var z = await client.db('project').collection("users").find().toArray();
   
-  req.session.user=a.username
-  
   z.forEach(m=>{
-    if(m.username === req.session.user ){ 
+    if(m.username === req.session.usernamebig && m.pass === req.session.passwordbig){ 
      for(i=0;i<m.Array.length;i++){
-        listbig[i]=m.Array[i]; 
+        ll[i] = m.Array[i]; 
     }
   }    
   });
-  req.session.array= listbig;
-  console.log(req.session.array);
+  for(i=0;i<ll.length;i++){
+    listbig[i]=ll[i] 
+  }
   }
   else {
     let jj = require('alert'); 
-    jj("Wrong username or password!");
+    jj("wrong user name or password");
     res.redirect('/');
     
   }
@@ -80,27 +79,18 @@ app.post('/', async function (req, res) {
 
 
 app.get('/registration', function (req, res) {
-
+ 
+ 
   res.render('registration');
 })
-app.get('/login', function (req, res) {
-  res.render('login')
-});
 app.post('/register',async  function (req, res) {
   var x = req.body.username;
   var y = req.body.password;
-  var list=[]
+  var listbig =[];
 
-  var a = { username: x, pass: y , Array: list };
+  var a = { username: x, pass: y , Array: listbig };
   flag = await main3(a);
-  if((x.trim().length==0)|| (y.length==0) )
-  {
-    let alert = require('alert'); 
-    //<span onclick="alert('ITEM ADDED TO WATCHLIST')">Add to your watchlist</span>    
-    alert("these fields can't be empty , please enter your info"); 
-    ///</span> onclick="alert('these fields can't be empty , please enter your info')">Add to your watchlist</span>
-  }
-  else{
+
   if (flag) {
     //res.send("This user already registered!");
     //res.jsonp("This user already registered!"); 
@@ -110,104 +100,87 @@ app.post('/register',async  function (req, res) {
   }
   else {
     
-    // usernamebig=req.body.username;
-    // passwordbig=req.body.password;
-    req.session.array=[];
-    console.log(req.session.array);
+  req.session.usernamebig=req.body.username;
+   req.session.passwordbig=req.body.password;
   main(a).catch(console.error);
       res.redirect('/home');
      
-  }}
+  }
  
 
 });
 
 
 app.get('/home',async function (req, res) {
-  if(authenticated === true){
-  
-    res.redirect('/home');
-}
-else{
-  let auth = require('alert'); 
-  auth("You are not authorized to go to this page!");
-  res.redirect('/');
-    
-}
+  if(!req.session.usernamebig){
+   let jj = require('alert'); 
+    jj("you should sign in first");
+    res.redirect('/');
+   }
+ 
+ else
+  res.render('home');
+
 });
-
-
-
 app.post('/home',async function (req, res) {
  
   res.render('home');
   });
 app.get('/phones',async function (req, res) {
-
-if(authenticated === true){
-  
-  res.render('phones');
-}
-else{
-let auth = require('alert'); 
-auth("You are not authorized to go to this page!");
-res.redirect('/');
-  
-}
+  if(!req.session.usernamebig){
+   let jj = require('alert'); 
+    jj("you should sign in first");
+    res.redirect('/');
+   }
+ 
+ else
+   res.render('phones');
 
 });
 app.get('/books',async function (req, res) {
-  if(authenticated === true){
-  
+  if(!req.session.usernamebig){
+   let jj = require('alert'); 
+    jj("you should sign in first");
+    res.redirect('/');
+   }
+ 
+ else
     res.render('books');
-}
-else{
-  let auth = require('alert'); 
-  auth("You are not authorized to go to this page!");
-  res.redirect('/');
-    
-}
     
  });
 app.get('/sports',async function (req, res) {
-  if(authenticated === true){
-  
+  if(!req.session.usernamebig){
+   let jj = require('alert'); 
+    jj("you should sign in first");
+    res.redirect('/');
+   }
+ 
+ else
     res.render('sports');
-}
-else{
-  let auth = require('alert'); 
-  auth("You are not authorized to go to this page!");
-  res.redirect('/');
-    
-}
     
 });
 
 
 app.get('/search',async function (req, res) {
-  if(authenticated === true){
-  
-    res.render('search');
-}
-else{
-  let auth = require('alert'); 
-  auth("You are not authorized to go to this page!");
-  res.redirect('/');
-    
-}
+  if(!req.session.usernamebig){
+   let jj = require('alert'); 
+    jj("you should sign in first");
+    res.redirect('/');
+   }
+ 
+ else
+    res.render('searchresults');
     
 });
 app.get('/iphone',async function (req, res) {
-  if(authenticated === true){
-  
+  if(!req.session.usernamebig){
+   let jj = require('alert'); 
+    jj("you should sign in first");
+    res.redirect('/');
+   }
+ 
+ else
     res.render('iphone');
-}
-else{
-  let auth = require('alert'); 
-  auth("You are not authorized to go to this page!");
-  res.redirect('/');
-    
-}
 
     
 });
@@ -220,41 +193,38 @@ app.post('/iphone',function(req,res){
   else
   {
     listbig.push('iPhone 13 Pro');
-  }
- 
- var a = { usernamebig: usernamebig, passwordbig: passwordbig , listbig:listbig  };
+    var a = { usernamebig: req.session.usernamebig, passwordbig: req.session.passwordbig , listbig:listbig  };
    AddToCart (a);  
    res.render('iphone');
+  }
+ 
+ 
 });
 app.get('/sun',async function (req, res) {
-  if(authenticated === true){
-  
+  if(!req.session.usernamebig){
+   let jj = require('alert'); 
+    jj("you should sign in first");
+    res.redirect('/');
+   }
+ 
+ else
     res.render('sun');
-}
-else{
-  let auth = require('alert'); 
-  auth("You are not authorized to go to this page!");
-  res.redirect('/');
-    
-}
     
 });
 app.get('/The',async function (req, res) {
-  if(authenticated === true){
-  
-    res.render('sun');
-}
-else{
-  let auth = require('alert'); 
-  auth("You are not authorized to go to this page!");
-  res.redirect('/');
-    
-}
+  if(!req.session.usernamebig){
+   let jj = require('alert'); 
+    jj("you should sign in first");
+    res.redirect('/');
+   }
+ 
+ else
+  res.render('sun');
   
 });
 app.post('/the',function(req,res,next){
   listbig.push('The Sun and Her Flowers');
-  var a = { usernamebig: usernamebig, passwordbig: passwordbig , listbig:listbig  };
+  var a = { usernamebig: req.session.usernamebig, passwordbig: req.session.passwordbig , listbig:listbig  };
   AddToCart (a);
   res.render('sun');
 });
@@ -267,28 +237,27 @@ app.post('/sun',function(req,res,next){
     else
     {
       listbig.push('The Sun and Her Flowers');
-    }
-  
-  var a = { usernamebig: usernamebig, passwordbig: passwordbig , listbig:listbig  };
+      var a = { usernamebig: req.session.usernamebig, passwordbig: req.session.passwordbig , listbig:listbig  };
   AddToCart (a);
   res.render('sun');
+    }
+  
+  
 });
 app.get('/leaves',async function (req, res) {
-  if(authenticated === true){
-  
+  if(!req.session.usernamebig){
+   let jj = require('alert'); 
+    jj("you should sign in first");
+    res.redirect('/');
+   }
+ 
+ else
     res.render('leaves');
-}
-else{
-  let auth = require('alert'); 
-  auth("You are not authorized to go to this page!");
-  res.redirect('/');
-    
-}
     
 });
 app.post('/leaves',function(req,res,next){
   
-    if (listbig.includes('Leaves of Grass'))
+    if ( listbig.includes('Leaves of Grass'))
     {
     let jj = require('alert'); 
     jj("this item is already added !");
@@ -296,22 +265,21 @@ app.post('/leaves',function(req,res,next){
     else
     {
       listbig.push('Leaves of Grass');
-    }
-  var a = { usernamebig: usernamebig, passwordbig: passwordbig , listbig:listbig  };
+      var a = { usernamebig: req.session.usernamebig, passwordbig: req.session.passwordbig , listbig:listbig  };
   AddToCart (a);
   res.render('leaves');
+    }
+  
 });
 app.get('/tennis',async function (req, res) {
-  if(authenticated === true){
-  
+  if(!req.session.usernamebig){
+   let jj = require('alert'); 
+    jj("you should sign in first");
+    res.redirect('/');
+   }
+ 
+ else
     res.render('tennis');
-}
-else{
-  let auth = require('alert'); 
-  auth("You are not authorized to go to this page!");
-  res.redirect('/');
-    
-}
     
 });
 app.post('/tennis',function(req,res,next){
@@ -323,24 +291,23 @@ app.post('/tennis',function(req,res,next){
   else
   {
     listbig.push('Tennis Racket');
+    var a = { usernamebig: req.session.usernamebig, passwordbig: req.session.passwordbig , listbig:listbig  };
+  AddToCart (a);
+  res.render('tennis');
   }
  
   
-  var a = { usernamebig: usernamebig, passwordbig: passwordbig , listbig:listbig  };
-  AddToCart (a);
-  res.render('tennis');
+  
 });
 app.get('/galaxy',async function (req, res) {
-  if(authenticated === true){
-  
+  if(!req.session.usernamebig){
+   let jj = require('alert'); 
+    jj("you should sign in first");
+    res.redirect('/');
+   }
+ 
+ else
     res.render('galaxy');
-}
-else{
-  let auth = require('alert'); 
-  auth("You are not authorized to go to this page!");
-  res.redirect('/');
-    
-}
     
 });
 app.post('/galaxy',function(req,res,next){
@@ -352,24 +319,23 @@ app.post('/galaxy',function(req,res,next){
   else
   {
     listbig.push('Galaxy S21 Ultra');
+    var a = { usernamebig: req.session.usernamebig, passwordbig: req.session.passwordbig , listbig:listbig  };
+  AddToCart (a);
+  res.render('galaxy');
   }
  
   
-  var a = { usernamebig: usernamebig, passwordbig: passwordbig , listbig:listbig  };
-  AddToCart (a);
-  res.render('galaxy');
+  
 });
 app.get('/boxing',async function (req, res) {
-  if(authenticated === true){
-  
+  if(!req.session.usernamebig){
+   let jj = require('alert'); 
+    jj("you should sign in first");
+    res.redirect('/');
+   }
+ 
+ else
     res.render('boxing');
-}
-else{
-  let auth = require('alert'); 
-  auth("You are not authorized to go to this page!");
-  res.redirect('/');
-    
-}
 
     
 });
@@ -382,15 +348,22 @@ app.post('/boxing',function(req,res,next){
   else
   {
     listbig.push('Boxing Bag');
-  }
-  
-  var a = { usernamebig: usernamebig, passwordbig: passwordbig , listbig:listbig  };
+    var a = { usernamebig: req.session.usernamebig, passwordbig: req.session.passwordbig , listbig:listbig  };
   AddToCart (a);
   res.render('boxing');
+  }
+  
+  
 });
 
 
 app.get('/cart',async function (req, res) {
+  if(!req.session.usernamebig){
+    let jj = require('alert'); 
+     jj("you should sign in first");
+     res.redirect('/');
+    }
+    else{
   var passedarr=[];
  
   var { MongoClient } = require('mongodb');
@@ -398,22 +371,24 @@ app.get('/cart',async function (req, res) {
   var client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
   await client.connect();
   var z = await client.db('project').collection("users").find().toArray();
-  
+  console.log(req.session.usernamebig);
   z.forEach(m=>{
-    if(m.username === usernamebig && m.pass === passwordbig){ 
+    if(m.username === req.session.usernamebig && m.pass === req.session.passwordbig){ 
      for(i=0;i<m.Array.length;i++){
         passedarr[i]=m.Array[i]; 
     }
-  }    
-  });
+  }
+});
+
   
   
-  console.log(passedarr);
-  
+console.log(passedarr);
   res.render('cart',{carlist:passedarr});
 
   client.close();
+}
 });
+
 app.post('/searchresults',async function (req, res) {
  var x = req.body.Search;
  y = await search(x) ;
@@ -426,16 +401,8 @@ app.post('/searchresults',async function (req, res) {
 
 
 app.get('/searchresults',async function (req, res) {
-  if(authenticated === true){
-  
-    res.render('searchresults');
-}
-else{
-  let auth = require('alert'); 
-  auth("You are not authorized to go to this page!");
-  res.redirect('/');
-    
-}
+  res.render('searchresults');
+
 });
 
 async function search (vars)
@@ -497,7 +464,6 @@ async function main2(input) {
   client.close();
 
   if (z.some(e => (e.username === input.username && e.pass === input.pass))) {
-     authenticated = true;
     /*fs.writeFileSync('current.json',JSON.stringify({z,fav}));
               req.session.user=element.x;
               req.session.save();*/
@@ -536,7 +502,13 @@ async () => {
 
 
 if(process.env.PORT){
-  app.listen(process.env.PORT, function(){console.log('server started')});
+  app.listen(process.env.PORT,function(){console.log('Server started')});
 }else{
-  app.listen(3000,function(){console.log('server started on port 3000')});
+  app.listen(3000,function(){console.log('Server started on port 3000')});
 }
+
+
+
+
+ 
+   
